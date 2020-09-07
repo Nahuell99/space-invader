@@ -1,6 +1,7 @@
 import pygame
 import random
 import math
+from pygame import mixer
 
 # inicializa pygame
 pygame.init()
@@ -13,6 +14,13 @@ screen = pygame.display.set_mode((displayX, displayY))
 
 # Fondo
 fondo = pygame.image.load('fondo.png')
+
+# Fondo musica
+mixer.music.load('background.wav')
+mixer.music.play(-1)
+
+
+
 
 # Titulo eh icono de la ventana
 pygame.display.set_caption("Space Invaders")
@@ -55,17 +63,23 @@ vacuna_state = "ready"
 
 
 #Puntuacion
-
 score_value = 0
 font = pygame.font.Font('APOLLO.otf', 32)
 
 textX = 10
 textY = 10
 
+#Game over text
+over_font = pygame.font.Font('APOLLO.otf', 64)
+
+
 def show_score(x,y):
     score = font.render("Score :" + str(score_value), True, (255,255,255))
     screen.blit(score, (x, y))
 
+def game_over_text():
+    over_text = over_font.render("GAME OVER", True, (255, 255, 255))
+    screen.blit(over_text, (200, 250))
 
 def fire_bullet(x, y):
     global vacuna_state
@@ -103,6 +117,8 @@ while running:
             if event.key == pygame.K_SPACE: #DETECTA ESPACIO Y DISPARA
                 #comprueba si la vacuna ya esta en pantalla
                 if vacuna_state is "ready":
+                    vacuna_sound = mixer.Sound('laser.wav')
+                    vacuna_sound.play()
                     #toma la posicion 'X' del player para iniciar el disparo de la vacuna
                     vacunaX = playerX
                     fire_bullet(vacunaX, vacunaY)
@@ -121,17 +137,28 @@ while running:
 
     # Comrpueba choque contra borde, enemigos
     for i in range(num_enemy):
+
+        #game over
+        if enemyY[i] > 200:
+            for j in range(num_enemy):
+                enemyY[j] = 2000
+            game_over_text()
+            break
+
+
         enemyX[i] += enemyX_speed[i]
         if enemyX[i] <= 0:
             enemyX_speed[i] = 0.3
-            enemyY[i] += 7
+            enemyY[i] += 10
         elif enemyX[i] >= 736:
             enemyX_speed[i] = -0.3
-            enemyY[i] += 7
+            enemyY[i] += 20
 
         # COLICIONES
         collision = isCollision(enemyX[i], enemyY[i], vacunaX, vacunaY)
         if collision:
+            collision_sound = mixer.Sound('explosion.wav')
+            collision_sound.play()
             vacunaY = 480
             vacuna_state = "ready"
             score_value += 1
